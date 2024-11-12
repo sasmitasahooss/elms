@@ -2,10 +2,12 @@ import React from 'react'
 import { useState } from 'react'
 import axios from 'axios'
 import Button from '../Components/button'
+import { useNavigate } from 'react-router-dom';
 const Registration = ({setView}) => {
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const navigate = useNavigate();
     const handleSubmit = async (e) => {
         e.preventDefault();
         const response = await axios.post(`http://localhost:3001/employees/register`, {name,email,password})
@@ -13,7 +15,7 @@ const Registration = ({setView}) => {
         console.log(result)
         }
     const switchToLogin = () => {
-        setView('login');
+       navigate('/login')
     }
   return (
     <>

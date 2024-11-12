@@ -2,22 +2,33 @@ import React from 'react'
 import Button from '../Components/button'
 import { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const LogIn = ({handleLogin, setView}) => {
+  const LogIn = ({handleLogin}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('')
+  const navigate = useNavigate();
   const handleSubmit =async (e) => {
     e.preventDefault();
-    handleLogin({email,password});
-    console.log('Form submitted');
-    const response = await axios.post(`http://localhost:3001/employees/login`, {email,password})
-    const result = response.data;
-    console.log(result)
-    setEmail('');
-    setPassword('')
-  };
+    
+    try {
+      const response = await axios.post('http://localhost:3001/employees/login', { email, password });
+      const result = response.data;
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('employeeId', result.id);
+     console.log(result)
+
+      if (result.resCode === 200) {
+          handleLogin({ email, password }); 
+      } else {
+          console.log('Login failed:', result.message);
+      }
+  } catch (error) {
+      console.error("An error occurred during login:", error);
+  }
+};
   const switchToRegistration = () => {
-    setView('registration');
+   navigate('/registration');
 }
  
   

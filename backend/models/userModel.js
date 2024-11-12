@@ -8,6 +8,11 @@ const employeeSchema = new mongoose.Schema({
     type: [mongoose.Schema.Types.ObjectId],
     ref: 'LeaveRequest'
   },
+  leaveHistory: {
+    default: [],
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: 'LeaveRequest'
+  },
   name: { 
     type: String, 
     required: true 
@@ -20,7 +25,10 @@ const employeeSchema = new mongoose.Schema({
     type: String, 
     required: true
  },
-  role: String
+  role: {
+    type: String,
+    default: 'employee'
+}
 });
 
 module.exports = mongoose.model('Employee', employeeSchema);
