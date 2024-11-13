@@ -4,21 +4,13 @@ const employeeSchema = new mongoose.Schema({
   id: { 
     type: String, 
 },
-  leaveRequests: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'LeaveRequest'
-  },
-  leaveHistory: {
-    default: [],
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'LeaveRequest'
-  },
   name: { 
     type: String, 
     required: true 
 },
   email: { 
     type: String, 
+    unique: true,
     required: true 
 },
   password: { 

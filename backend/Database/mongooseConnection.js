@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 mongoose
-.connect('mongodb://localhost:27017/elms')
+.connect('mongodb+srv://sahoosasmita5420:asdfghjkl@cluster0.yskbc.mongodb.net/elms')
 .then(() => {
   console.log('Connected to MongoDB');
 })

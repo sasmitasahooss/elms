@@ -24,16 +24,20 @@ const verifyToken = (req, res, next) => {
 // Register route for new employees
 router.post('/register', async (req, res) => {
     try {
-        let employee = new Employee(req.body);
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        employee.password = hashedPassword;
-        await employee.save();
-        res.json({ message: "Employee registered successfully", registeredEmployee: employee });
+        
+         const {name, email, password} = req.body;
+         const hashedPassword = await bcrypt.hash(password, 10);
+         const employee = await Employee.create({name, email, password: hashedPassword});
+         res.status(200).json({message: "User registered successfully", employee});
+         console.log(employee);
     } catch (error) {
         console.error("Error in registration:", error);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Email already exists", error: error.message });
+        console.log(error)
     }
 });
+
+
 
 // Login route for employees
 router.post('/login', async (req, res) => {
@@ -54,8 +58,16 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error("Error in login:", error);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Server error", error: error.message });
     }
+});
+
+router.get('/admin', verifyToken, (req, res) => {
+    res.json({message: "Admin route accessed"});
+});
+
+router.get('/employee', verifyToken, (req, res) => {
+    res.json({message: "Employee route accessed"});
 });
 
 // Route to fetch all leave requests
@@ -72,8 +84,34 @@ router.get('/leaveRequests', async (req, res) => {
 // Route to create a new leave request
 router.post('/leave-requests', async (req, res) => {
     try {
-        const { leaveType, startDate, endDate, reason } = req.body;
-        const leaveRequest = await LeaveRequest.create({ leaveType, startDate, endDate, reason, createdBy });
+        const { leaveType, startDate, endDate, reason, employeeId } = req.body;
+
+        console.log(leaveType, startDate, endDate, reason, employeeId);
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const calculateDurationInDays = (start, end) => {
+            const differenceInTime = end - start;
+            const differenceInDays = differenceInTime / (1000 * 60 * 60 * 24);
+            return differenceInDays;
+        };
+        const durationInDays = calculateDurationInDays(start, end);
+
+        const employee = await Employee.findById(employeeId);
+        const leaveRequest = await LeaveRequest.create({ 
+            leaveType, 
+            startDate: start,
+            endDate: end,
+            reason, 
+            createdBy: employeeId, 
+            name: employee.name, 
+            status: 'pending',
+            leaveBalance: {
+                leaveType: leaveType,
+                durationInDays: durationInDays
+            }
+        });
+
         res.json({ message: "Leave request created successfully", leaveRequest });
     } catch (error) {
         console.error("Error creating leave request:", error);
@@ -81,10 +119,11 @@ router.post('/leave-requests', async (req, res) => {
     }
 });
 
+
 // Route to fetch leave requests by employee ID
-router.get('/employees/:employeeId/leaveRequests', async (req, res) => {
+router.get('/:employeeId/leaveRequests', async (req, res) => {
     try {
-        const { employeeId } = req.params;
+        const employeeId = req.params.employeeId;
         const leaveRequests = await LeaveRequest.find({ createdBy: employeeId });
         if (leaveRequests.length === 0) {
             return res.status(404).json({ message: 'No leave requests found for this employee' });
@@ -94,6 +133,12 @@ router.get('/employees/:employeeId/leaveRequests', async (req, res) => {
         console.error("Error fetching leave requests:", error);
         res.status(500).json({ message: "Server error" });
     }
+});
+
+router.get('/:employeeId/leave-balance', async (req, res) => {
+    const employeeId = req.params.employeeId;
+    const leaveBalance = await LeaveRequest.find({ createdBy: employeeId });
+    res.json(leaveBalance);
 });
 
 module.exports = router;
